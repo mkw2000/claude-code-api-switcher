@@ -9,7 +9,6 @@ SETTINGS_FILE="$CLAUDE_DIR/settings.json"
 CUSTOM_FILE="$CLAUDE_DIR/settings.custom.json"
 ANTHROPIC_FILE="$CLAUDE_DIR/settings.anthropic.json"
 
-# Load environment variables from ~/.env
 load_env() {
     if [[ -f "$HOME/.env" ]]; then
         export $(grep -v '^#' "$HOME/.env" | xargs)
@@ -18,7 +17,6 @@ load_env() {
     fi
 }
 
-# Create custom API settings template
 create_custom_settings() {
     load_env
     cat > "$CUSTOM_FILE" << EOF
@@ -33,14 +31,12 @@ create_custom_settings() {
 EOF
 }
 
-# Create Anthropic login settings (empty/default)
 create_anthropic_settings() {
     cat > "$ANTHROPIC_FILE" << 'EOF'
 {}
 EOF
 }
 
-# Initialize configuration files if they don't exist
 init_files() {
     if [[ ! -f "$CUSTOM_FILE" ]]; then
         echo "Creating custom API settings template..."
@@ -54,21 +50,18 @@ init_files() {
     fi
 }
 
-# Switch to custom API configuration
 use_custom() {
     echo "Switching to custom API configuration..."
     cp "$CUSTOM_FILE" "$SETTINGS_FILE"
     echo "Now using custom API settings"
 }
 
-# Switch to Anthropic login
 use_anthropic() {
     echo "Switching to Anthropic login..."
     cp "$ANTHROPIC_FILE" "$SETTINGS_FILE"
     echo "Now using Anthropic login (default settings)"
 }
 
-# Show current configuration status
 show_status() {
     if [[ -f "$SETTINGS_FILE" ]]; then
         if grep -q "ANTHROPIC_AUTH_TOKEN" "$SETTINGS_FILE" 2>/dev/null; then
@@ -81,7 +74,6 @@ show_status() {
     fi
 }
 
-# Main script logic
 case "${1:-status}" in
     "custom"|"api"|"use-custom")
         init_files
