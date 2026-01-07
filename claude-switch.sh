@@ -75,11 +75,11 @@ show_status() {
 }
 
 case "${1:-status}" in
-    "custom"|"api"|"use-custom")
+    "custom"|"api"|"use-custom"|"glm")
         init_files
         use_custom
         ;;
-    "anthropic"|"login"|"use-anthropic")
+    "anthropic"|"login"|"use-anthropic"|"default")
         init_files
         use_anthropic
         ;;
