@@ -8,6 +8,7 @@ CLAUDE_DIR="$HOME/.claude"
 SETTINGS_FILE="$CLAUDE_DIR/settings.json"
 CUSTOM_FILE="$CLAUDE_DIR/settings.custom.json"
 ANTHROPIC_FILE="$CLAUDE_DIR/settings.anthropic.json"
+KIMI_FILE="$CLAUDE_DIR/settings.kimi.json"
 
 load_env() {
     if [[ -f "$HOME/.env" ]]; then
@@ -31,6 +32,20 @@ create_custom_settings() {
 EOF
 }
 
+create_kimi_settings() {
+    load_env
+    cat > "$KIMI_FILE" << EOF
+{
+  "env": {
+    "ANTHROPIC_MODEL": "moonshot-v1-8k",
+    "ANTHROPIC_BASE_URL": "https://api.moonshot.cn/anthropic",
+    "ANTHROPIC_AUTH_TOKEN": "\${MOONSHOT_AI_API_KEY:-your-moonshot-api-key-here}"
+  },
+  "alwaysThinkingEnabled": true
+}
+EOF
+}
+
 create_anthropic_settings() {
     cat > "$ANTHROPIC_FILE" << 'EOF'
 {}
@@ -42,6 +57,11 @@ init_files() {
         echo "Creating custom API settings template..."
         create_custom_settings
         echo "Custom settings template created. Edit $CUSTOM_FILE with your API configuration."
+    fi
+
+    if [[ ! -f "$KIMI_FILE" ]]; then
+        echo "Creating Kimi settings file..."
+        create_kimi_settings
     fi
 
     if [[ ! -f "$ANTHROPIC_FILE" ]]; then
@@ -56,6 +76,12 @@ use_custom() {
     echo "Now using custom API settings"
 }
 
+use_kimi() {
+    echo "Switching to Kimi (Moonshot AI) configuration..."
+    cp "$KIMI_FILE" "$SETTINGS_FILE"
+    echo "Now using Kimi API settings"
+}
+
 use_anthropic() {
     echo "Switching to Anthropic login..."
     cp "$ANTHROPIC_FILE" "$SETTINGS_FILE"
@@ -64,7 +90,9 @@ use_anthropic() {
 
 show_status() {
     if [[ -f "$SETTINGS_FILE" ]]; then
-        if grep -q "ANTHROPIC_AUTH_TOKEN" "$SETTINGS_FILE" 2>/dev/null; then
+        if grep -q "moonshot.cn" "$SETTINGS_FILE" 2>/dev/null; then
+            echo "Currently using: Kimi (Moonshot AI) configuration"
+        elif grep -q "ANTHROPIC_AUTH_TOKEN" "$SETTINGS_FILE" 2>/dev/null; then
             echo "Currently using: Custom API configuration"
         else
             echo "Currently using: Anthropic login (default)"
@@ -75,6 +103,10 @@ show_status() {
 }
 
 case "${1:-status}" in
+    "kimi"|"moonshot"|"use-kimi")
+        init_files
+        use_kimi
+        ;;
     "custom"|"api"|"use-custom"|"glm")
         init_files
         use_custom
@@ -92,12 +124,14 @@ case "${1:-status}" in
         echo "Usage: $0 [command]"
         echo ""
         echo "Commands:"
-        echo "  custom, api, use-custom    Switch to custom API configuration"
+        echo "  kimi, moonshot, use-kimi     Switch to Kimi (Moonshot AI) configuration"
+        echo "  custom, api, use-custom      Switch to custom API configuration"
         echo "  anthropic, login, use-anthropic  Switch to Anthropic login"
-        echo "  status, --status          Show current configuration"
-        echo "  help, --help              Show this help"
+        echo "  status, --status              Show current configuration"
+        echo "  help, --help                  Show this help"
         echo ""
         echo "Environment Variables:"
+        echo "  MOONSHOT_AI_API_KEY           Your Moonshot AI API key for Kimi"
         echo "  The script loads API keys from ~/.env file"
         echo "  Edit settings.custom.json to configure your API endpoints"
         ;;
