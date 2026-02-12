@@ -12,7 +12,12 @@ KIMI_FILE="$CLAUDE_DIR/settings.kimi.json"
 
 load_env() {
     if [[ -f "$HOME/.env" ]]; then
-        export $(grep -v '^#' "$HOME/.env" | xargs)
+        # Load while ignoring comments and empty lines, and handle values with spaces/special chars
+        while IFS= read -r line || [[ -n "$line" ]]; do
+            [[ "$line" =~ ^#.*$ ]] && continue
+            [[ -z "$line" ]] && continue
+            export "$line"
+        done < "$HOME/.env"
     else
         echo "Warning: ~/.env file not found"
     fi
@@ -25,7 +30,7 @@ create_custom_settings() {
   "env": {
     "ANTHROPIC_MODEL": "CUSTOM_MODEL_NAME",
     "ANTHROPIC_BASE_URL": "https://api.example.com/anthropic",
-    "ANTHROPIC_AUTH_TOKEN": "\${YOUR_API_KEY:-your-api-key-here}"
+    "ANTHROPIC_AUTH_TOKEN": "${YOUR_API_KEY:-your-api-key-here}"
   },
   "alwaysThinkingEnabled": true
 }
@@ -37,9 +42,10 @@ create_kimi_settings() {
     cat > "$KIMI_FILE" << EOF
 {
   "env": {
-    "ANTHROPIC_MODEL": "moonshot-v1-8k",
-    "ANTHROPIC_BASE_URL": "https://api.moonshot.cn/anthropic",
-    "ANTHROPIC_AUTH_TOKEN": "\${MOONSHOT_AI_API_KEY:-your-moonshot-api-key-here}"
+    "ANTHROPIC_MODEL": "kimi-k2.5",
+    "ANTHROPIC_SMALL_FAST_MODEL": "kimi-k2.5",
+    "ANTHROPIC_BASE_URL": "https://api.kimi.com/coding",
+    "ANTHROPIC_AUTH_TOKEN": "${MOONSHOT_AI_API_KEY:-your-moonshot-api-key-here}"
   },
   "alwaysThinkingEnabled": true
 }
